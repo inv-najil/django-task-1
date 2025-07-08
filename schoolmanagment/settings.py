@@ -41,9 +41,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'accounts'
-    'students'
-    'teachers'
+    'accounts',
+    'students',
+    'teachers',
 ]
 
 MIDDLEWARE = [
@@ -136,3 +136,5 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     )
 }
+AUTH_USER_MODEL = 'accounts.User'
+
