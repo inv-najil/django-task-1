@@ -1,6 +1,6 @@
 from django.db import models
 
-class Techer(models.Model):
+class Teacher(models.Model):
     STATUS_CHOICE = (
         ('active','ACTIVE'),
         ('inactive','INACTIVE'),
