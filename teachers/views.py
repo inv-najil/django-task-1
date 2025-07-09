@@ -1,11 +1,11 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .models import Techer
+from .models import Teacher
 from .serializers import TeacherSerializer
 
 class TeacherView(viewsets.ModelViewSet):
-    queryset = Techer.objects.all()
+    queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer
     permission_classes = [IsAuthenticated]
 
