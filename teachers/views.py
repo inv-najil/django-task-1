@@ -3,11 +3,12 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import Teacher
 from .serializers import TeacherSerializer
+from students.permissions import IsTeacher
 
 class TeacherView(viewsets.ModelViewSet):
     queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsTeacher]
 
     def create(self, request, *args, **kwargs):
         try:
