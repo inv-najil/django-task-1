@@ -5,14 +5,13 @@ from rest_framework.decorators import action
 
 from .models import Student
 from .serializers import StudentSerializer
-from students.permissions import IsTeacher, IsStudentReadOnly, IsAdminOrReadOnly
+from students.permissions import IsTeacherOrSelfOrAdmin
 from teachers.models import Teacher
 
 class StudentView(viewsets.ModelViewSet):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
-    # Combined permissions using |
-    permission_classes = [IsTeacher | IsAdminOrReadOnly | IsStudentReadOnly]
+    permission_classes = [IsTeacherOrSelfOrAdmin]
 
     def get_queryset(self):
         user = self.request.user
