@@ -1,30 +1,28 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 from .models import Teacher
 from .serializers import TeacherSerializer
-from students.permissions import IsTeacher
+from students.permissions import IsAdminOrReadOnly  
 
 class TeacherView(viewsets.ModelViewSet):
     queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer
-    permission_classes = [IsTeacher]
+    permission_classes = [IsAdminOrReadOnly]
 
     def create(self, request, *args, **kwargs):
         try:
-            return super().create(request,*args,**kwargs)
+            return super().create(request, *args, **kwargs)
         except Exception as e:
-            return Response({'error':str(e)},status=status.HTTP_400_BAD_REQUEST)
-    
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
     def update(self, request, *args, **kwargs):
         try:
             return super().update(request, *args, **kwargs)
         except Exception as e:
-            return Response({'error':str(e)},status=status.HTTP_400_BAD_REQUEST)
-    
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
     def destroy(self, request, *args, **kwargs):
         try:
             return super().destroy(request, *args, **kwargs)
         except Exception as e:
-            return Response({'error':str(e)},status=status.HTTP_400_BAD_REQUEST)
-
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
