@@ -25,6 +25,7 @@ class LoginAPIview(APIView):
             })
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class RegistrationAPIview(APIView):
     permission_classes = []
 
@@ -34,7 +35,7 @@ class RegistrationAPIview(APIView):
         if serializer.is_valid():
             role = serializer.validated_data.get('role')
 
-            # ❌ Prevent non-admins from registering teachers
+            
             if role == 'teacher':
                 if not request.user.is_authenticated or not request.user.is_superuser:
                     return Response(
@@ -44,6 +45,7 @@ class RegistrationAPIview(APIView):
 
             try:
                 with transaction.atomic():
+                    
                     user = serializer.save()
 
                     if role == 'teacher':
@@ -55,17 +57,20 @@ class RegistrationAPIview(APIView):
                             phone=request.data.get('phone'),
                             subject_spl=request.data.get("subject_spl"),
                             employee_id=request.data.get('employee_id'),
+                            dob=request.data.get('dob'),
                             date_of_joining=request.data.get('date_of_joining'),
                             status=request.data.get('status')
                         )
 
                     elif role == 'student':
+                        
                         assigned_teacher_id = request.data.get('assigned_teacher')
                         try:
                             assigned_teacher = Teacher.objects.get(id=assigned_teacher_id)
                         except Teacher.DoesNotExist:
                             raise serializers.ValidationError({'assigned_teacher': 'Teacher does not exist'})
 
+                        
                         Student.objects.create(
                             user=user,
                             first_name=user.first_name,
@@ -88,6 +93,9 @@ class RegistrationAPIview(APIView):
                         }
                     }, status=status.HTTP_201_CREATED)
 
+            except serializers.ValidationError as e:
+                
+                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
             except Exception as e:
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
