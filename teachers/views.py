@@ -3,6 +3,9 @@ from rest_framework.response import Response
 from .models import Teacher
 from .serializers import TeacherSerializer
 from students.permissions import IsAdminOrReadOnly  
+from rest_framework.decorators import action
+from django.http import HttpResponse
+import csv
 
 class TeacherView(viewsets.ModelViewSet):
     queryset = Teacher.objects.all()
@@ -26,3 +29,28 @@ class TeacherView(viewsets.ModelViewSet):
             return super().destroy(request, *args, **kwargs)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    @action(detail=False, methods=['get'], url_path='export-csv')
+    def export_csv(self,request):
+        if not request.user.is_authenticated or not request.user.is_authenticated:
+            return Response({"error": "Only admin users can export teacher data."}, status=status.HTTP_403_FORBIDDEN)
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="teachers.csv"'
+        writer = csv.writer(response)
+        writer.writerow([
+            'ID', 'First Name', 'Last Name', 'Email',
+            'Phone', 'Subject', 'Employee ID',
+             'Date of Joining', 'Status'
+        ])
+        for teacher in self.get_queryset():
+            writer.writerow([
+                teacher.id,
+                teacher.first_name,
+                teacher.last_name,
+                teacher.email,
+                teacher.phone,
+                teacher.subject_spl,
+                teacher.employee_id,
+                teacher.date_of_joining,
+                teacher.status
+            ])
+        return response
