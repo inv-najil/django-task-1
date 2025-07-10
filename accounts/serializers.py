@@ -1,10 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from.models import User
+from django.db import transaction
+from .models import User  # Fixed spacing
 
-
-
-#Login
+# Login Serializer
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
@@ -13,9 +12,9 @@ class LoginSerializer(serializers.Serializer):
         user = authenticate(**data)
         if user and user.is_active:
             return user
-        raise serializers.ValidationError("Invalide credentials or user is not active")
-    
-#Registration
+        raise serializers.ValidationError("Invalid credentials or user is not active")
+
+# Registration Serializer
 class RegistrationSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     email = serializers.EmailField(required=True)
@@ -35,8 +34,9 @@ class RegistrationSerializer(serializers.Serializer):
     def create(self, validated_data):
         validated_data.pop('password2')
         password = validated_data.pop('password')
-        user = User(**validated_data)
-        user.set_password(password)
-        user.save()
-        return user
-        
+
+        with transaction.atomic():
+            user = User(**validated_data)
+            user.set_password(password)
+            user.save()
+            return user
