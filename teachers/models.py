@@ -1,10 +1,12 @@
 from django.db import models
+from accounts.models import User
 
-class Techer(models.Model):
+class Teacher(models.Model):
     STATUS_CHOICE = (
         ('active','ACTIVE'),
         ('inactive','INACTIVE'),
     )
+    user = models.OneToOneField(User, on_delete=models.CASCADE,null=True,blank=True) 
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
