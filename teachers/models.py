@@ -1,6 +1,8 @@
 from django.db import models
 from accounts.models import User
-
+"""
+teacher tabel deatils that has one to one relation with User tabel
+"""
 class Teacher(models.Model):
     STATUS_CHOICE = (
         ('active','ACTIVE'),

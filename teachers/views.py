@@ -2,15 +2,18 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .models import Teacher
 from .serializers import TeacherSerializer
-from students.permissions import IsAdminOrReadOnly  
+from students.permissions import IsAdminOrTeacherOnly 
 from rest_framework.decorators import action
 from django.http import HttpResponse
 import csv
 
+"""
+teacher Curd operations with permissions
+"""
 class TeacherView(viewsets.ModelViewSet):
     queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdminOrTeacherOnly]
 
     def create(self, request, *args, **kwargs):
         try:
@@ -29,6 +32,10 @@ class TeacherView(viewsets.ModelViewSet):
             return super().destroy(request, *args, **kwargs)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+    """
+     Function to return the teacher data as csb using action decorater
+    """
     @action(detail=False, methods=['get'], url_path='export-csv')
     def export_csv(self,request):
         if not request.user.is_authenticated or not request.user.is_authenticated:

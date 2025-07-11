@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from .models import Teacher
 
+"""
+Validating the Uniqueness of email and employee id
+"""
 class TeacherSerializer(serializers.ModelSerializer):
     class Meta:
         model = Teacher

@@ -1,28 +1,22 @@
+# in students/permissions.py (or teachers/permissions.py)
+
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
-class IsTeacherOrSelfOrAdmin(BasePermission):
+class IsAdminOrTeacherOnly(BasePermission):
     """
-    - Admin: full access
-    - Teacher: full access to all students
-    - Student: can only read their own data
+    - Admins: full access
+    - Teachers: only safe methods (GET) on teachers
+    - Everyone else (students): no access, even to GET
     """
-
-    def has_object_permission(self, request, view, obj):
+    def has_permission(self, request, view):
         user = request.user
-
+        if not user.is_authenticated:
+            return False
         if user.is_superuser:
             return True
-
-        if user.role == 'teacher':
-            return True  
-
-        if user.role == 'student' and request.method in SAFE_METHODS:
-            return obj.user == user  
-
+        if user.role == 'teacher' and request.method in SAFE_METHODS:
+            return True
         return False
-
-    def has_permission(self, request, view):
-        return request.user.is_authenticated
 
 class IsAdminOrReadOnly(BasePermission):
     def has_permission(self, request, view):
