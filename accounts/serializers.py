@@ -63,7 +63,7 @@ class RegistrationSerializer(serializers.Serializer):
             for key in ("subject_spl","employee_id","date_of_joining","status"):
                 profile_data[key] = validated_data.pop(key)
         else:
-            for key in ("roll_no","grade","dob","admission_date","assigined_teacher","status"):
+            for key in ("roll_no","grade","dob","admission_date","assigned_teacher","status"):
                 profile_data[key] = validated_data.pop(key)
         
         with transaction.atomic():#using to solve the issue of partial creation
