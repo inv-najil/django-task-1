@@ -12,16 +12,16 @@ import csv
 Student curd opersations with permission class and quetset modified to see only their data
 """
 class StudentView(viewsets.ModelViewSet):
-    queryset = Student.objects.all()
+    queryset = Student.objects.all().order_by("id")
     serializer_class = StudentSerializer
     permission_classes = [IsAdminOrTeacherOnly]
 
     def get_queryset(self):
         user = self.request.user
         if user.is_superuser or user.role == 'teacher':
-            return Student.objects.all()
+            return Student.objects.all().order_by("id")
         elif user.role == 'student':
-            return Student.objects.filter(user=user)
+            return Student.objects.filter(user=user).order_by("id")
         return Student.objects.none()
 
     def create(self, request, *args, **kwargs):
@@ -63,7 +63,7 @@ class StudentView(viewsets.ModelViewSet):
     """
     @action(detail=False, methods=['get'], url_path='export-csv')
     def export_csv(self,request):
-        if not request.user.is_authenticated or request.user.role != 'teacher' and not request.user.is_superuser:
+        if not request.user.is_authenticated or not (request.user.role == 'teacher' or request.user.is_superuser):
             return Response({"error": "You are not authorized to export data."}, status=status.HTTP_403_FORBIDDEN)
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="students.csv"'

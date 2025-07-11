@@ -1,11 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, serializers
+from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.db import transaction
 from .serializers import LoginSerializer, RegistrationSerializer
-from teachers.models import Teacher
-from students.models import Student
+
 """
 -Login Api view that returens acess token and username and role
 """
