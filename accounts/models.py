@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-
+"""
+-Creating a user model from AbstractUser with extra role field
+"""
 class User(AbstractUser):
     ROLE_CHOICE = (
         ('teacher','TEACHER'),

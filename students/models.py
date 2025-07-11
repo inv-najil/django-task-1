@@ -1,7 +1,9 @@
 from django.db import models
 from teachers.models import Teacher
 from accounts.models import User
-
+"""
+Creating a student tabel that has oneto one connection with usertabel
+"""
 class Student(models.Model):
     STATUS_CHOICE = (
         ('active','ACTIVE'),

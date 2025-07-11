@@ -3,15 +3,18 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import Student
 from .serializers import StudentSerializer
-from students.permissions import IsTeacherOrSelfOrAdmin
+from students.permissions import IsAdminOrTeacherOnly
 from teachers.models import Teacher
 from django.http import HttpResponse
 import csv
 
+"""
+Student curd opersations with permission class and quetset modified to see only their data
+"""
 class StudentView(viewsets.ModelViewSet):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
-    permission_classes = [IsTeacherOrSelfOrAdmin]
+    permission_classes = [IsAdminOrTeacherOnly]
 
     def get_queryset(self):
         user = self.request.user
@@ -38,7 +41,10 @@ class StudentView(viewsets.ModelViewSet):
             return super().destroy(request, *args, **kwargs)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+  
+    """
+    Function to get assigned teacher to a student that uses the action decorator
+    """
     @action(detail=False, methods=['get'], url_path='assigned-to/(?P<teacher_id>[^/.]+)')
     def assigned_to_teacher(self, request, teacher_id=None):
         try:
@@ -48,8 +54,13 @@ class StudentView(viewsets.ModelViewSet):
 
         students = Student.objects.filter(assigned_teacher=teacher)
         serializer = self.get_serializer(students, many=True)
+    
+       
         return Response(serializer.data)
     
+    """
+    Function to export student details as csv using action decorator
+    """
     @action(detail=False, methods=['get'], url_path='export-csv')
     def export_csv(self,request):
         if not request.user.is_authenticated or request.user.role != 'teacher' and not request.user.is_superuser:

@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import Student
-
+"""
+Validating student deatils like duplicate email and duplicate roll number
+"""
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
