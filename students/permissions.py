@@ -21,3 +21,7 @@ class IsAdminOrReadOnly(BasePermission):
         return request.user.is_authenticated and (
             request.user.is_superuser or request.method in SAFE_METHODS
         )
+
+class IsStudentOnly(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == 'student'
