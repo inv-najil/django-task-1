@@ -5,6 +5,9 @@ from accounts.models import User
 from teachers.models import Teacher
 from students.models import Student
 import datetime
+from django.core.files.uploadedfile import SimpleUploadedFile
+import io
+import csv
 
 class StudentViewTestCase(TestCase):
     def setUp(self):
@@ -60,11 +63,11 @@ class StudentViewTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
     
-    def test_list_students_as_student(self):
+    def test_student_cannot_access_teacher_list(self):
         self.client.force_authenticate(user=self.student_user)
-        response = self.client.get('/api/students/')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1) 
+        response = self.client.get('/api/teachers/')
+        self.assertEqual(response.status_code, 403)
+
     
     def test_create_student_as_admin(self):
         self.client.force_authenticate(user=self.admin_user)
@@ -126,7 +129,44 @@ class StudentViewTestCase(TestCase):
         response = self.client.delete('/api/students/999/')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('error', response.data)
-    
+    def test_import_csv_success(self):
+        self.client.force_authenticate(user=self.admin_user)
+        
+        # Create a sample in-memory CSV file
+        csv_content = (
+            "username,email,first_name,last_name,phone,roll_no,grade,dob,admission_date,status,assigned_teacher,password\n"
+            "student_csv,student_csv@example.com,Alice,Walker,1112223333,R004,7,2013-01-10,2023-07-01,active,{teacher_id},pass001\n"
+        ).format(teacher_id=self.teacher.id)
+        
+        csv_file = SimpleUploadedFile("students.csv", csv_content.encode("utf-8"), content_type="text/csv")
+        
+        response = self.client.post('/api/students/import-csv/', {'file': csv_file}, format='multipart')
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("sucessfully_created", response.data)
+        self.assertEqual(response.data["sucessfully_created"], 1)
+
+    def test_import_csv_missing_file(self):
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post('/api/students/import-csv/', {}, format='multipart')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("error", response.data)
+
+    def test_import_csv_invalid_teacher_id(self):
+        self.client.force_authenticate(user=self.admin_user)
+        
+        csv_content = (
+            "username,email,first_name,last_name,phone,roll_no,grade,dob,admission_date,status,assigned_teacher,password\n"
+            "invalid_teacher,invalid_teacher@example.com,Alice,Walker,1112223333,R005,7,2013-01-10,2023-07-01,active,9999,pass001\n"
+        )
+        csv_file = SimpleUploadedFile("students.csv", csv_content.encode("utf-8"), content_type="text/csv")
+        
+        response = self.client.post('/api/students/import-csv/', {'file': csv_file}, format='multipart')
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["sucessfully_created"], 0)
+        self.assertTrue("invalid teacher" in str(response.data["failed_entries"]))
+
     
     
     

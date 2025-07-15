@@ -2,7 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .models import Teacher
 from .serializers import TeacherSerializer
-from students.permissions import IsAdminOrTeacherOnly 
+from students.permissions import IsAdminOrTeacherReadOnly 
 from rest_framework.decorators import action
 from django.http import HttpResponse
 import csv
@@ -13,7 +13,7 @@ teacher Curd operations with permissions
 class TeacherView(viewsets.ModelViewSet):
     queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer
-    permission_classes = [IsAdminOrTeacherOnly]
+    permission_classes = [IsAdminOrTeacherReadOnly]
 
     def create(self, request, *args, **kwargs):
         try:

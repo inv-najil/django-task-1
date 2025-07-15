@@ -16,9 +16,9 @@ class ExamViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ['create', 'add_questions']:
-            return [IsAdminOrTeacherOnly()]
+            return [IsAuthenticated(),IsAdminOrTeacherOnly()]
         elif self.action in ['submit_exam','results']:
-            return [IsStudentOnly()]
+            return [IsAuthenticated(),IsStudentOnly()]
         elif self.action in['list','retrieve']:
             return[IsAuthenticated()]
         return super().get_permissions()
@@ -54,13 +54,15 @@ class ExamViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         now = timezone.now()
-        submission = StudentExamSubmission.objects.create(
-            student=user, exam=exam,started_at=now, score=0
-        )
-        allowed_end_time = submission.started_at + timedelta(minutes=exam.duration)
+        allowed_end_time = now + timedelta(minutes=exam.duration)
+
         if now > allowed_end_time:
-            submission.delete()
-            return Response({"Error":"Time limit Exceeded"},status=status.HTTP_400_BAD_REQUEST)
+            return Response({"Error": "Time limit Exceeded"}, status=status.HTTP_400_BAD_REQUEST)
+
+           
+        submission = StudentExamSubmission.objects.create(
+            student=user, exam=exam, started_at=now, score=0
+        )
         
         total_score = 0
         for ans_data in serializer.validated_data['answers']:
