@@ -4,6 +4,11 @@ from rest_framework import status
 from accounts.models import User
 from teachers.models import Teacher
 import datetime
+from django.core import mail
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.contrib.auth.tokens import default_token_generator
+
 
 class LoginAPIViewTest(TestCase):
     def setUp(self):
@@ -121,17 +126,63 @@ class RegistrationAPIViewTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("non_field_errors", response.data)
     
-    
-    
-    
-    
-    
+class PasswordResetTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username='resetuser',
+            email='reset@example.com',
+            password='oldpassword',
+            role='student'
+        )
 
-    
-    
-    
+    def test_password_reset_request_valid_email(self):
+        response = self.client.post('/api/password-rest', {'email': 'reset@example.com'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("message", response.data)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("Click the link", mail.outbox[0].body)
 
-    
-    
-    
-    
+    def test_password_reset_request_invalid_email(self):
+        response = self.client.post('/api/password-rest', {'email': 'wrong@example.com'})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn("error", response.data)
+
+    def test_password_reset_request_no_email(self):
+        response = self.client.post('/api/password-rest', {})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("error", response.data)
+
+    def test_password_reset_confirm_valid_token(self):
+        uid = urlsafe_base64_encode(force_bytes(self.user.pk))
+        token = default_token_generator.make_token(self.user)
+        new_password = "newsecurepassword123"
+        response = self.client.post(f'/api/password-reset-confirm/{uid}/{token}/', {
+            'new_password': new_password
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("message", response.data)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password(new_password))
+
+    def test_password_reset_confirm_invalid_token(self):
+        uid = urlsafe_base64_encode(force_bytes(self.user.pk))
+        response = self.client.post(f'/api/password-reset-confirm/{uid}/invalidtoken/', {
+            'new_password': 'whatever123'
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Error", response.data)
+
+    def test_password_reset_confirm_missing_password(self):
+        uid = urlsafe_base64_encode(force_bytes(self.user.pk))
+        token = default_token_generator.make_token(self.user)
+        response = self.client.post(f'/api/password-reset-confirm/{uid}/{token}/', {})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Error", response.data)
+
+    def test_password_reset_confirm_invalid_uid(self):
+        response = self.client.post('/api/password-reset-confirm/invaliduid/token/', {
+            'new_password': 'newpass123'
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Error", response.data)
