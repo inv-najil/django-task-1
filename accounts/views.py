@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import LoginSerializer, RegistrationSerializer
 from django.contrib.auth.tokens import default_token_generator
@@ -8,6 +9,8 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
+from students.permissions import IsAdminOrTeacherReadOnly
+from teachers.models import Teacher
 
 User = get_user_model()
 """
@@ -21,13 +24,22 @@ class LoginAPIview(APIView):
         if serializer.is_valid():
             user = serializer.validated_data
             refresh = RefreshToken.for_user(user)
+            user_data = {
+                'id': user.id,
+                'username': user.username,
+                'role': user.role,
+                'is_superuser': user.is_superuser,
+            }
+            if user.role == 'teacher':
+                try:
+                     teacher = Teacher.objects.get(user=user)
+                     user_data['teacher_id'] = teacher.id
+                except Teacher.DoesNotExist:
+                     user_data['teacher_id'] = None
             return Response({
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
-                'user': {
-                    'username': user.username,
-                    'role': user.role
-                }
+                'user': user_data                
             })
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -35,7 +47,7 @@ class LoginAPIview(APIView):
 -Registration api view that on sucess return sucess mesaage and username,role
 """
 class RegistrationAPIview(APIView):
-    permission_classes = []
+    permission_classes = [IsAdminOrTeacherReadOnly]
     def post(self, request):
         serializer = RegistrationSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
@@ -66,7 +78,7 @@ class PasswordRestRequestView(APIView):
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
 
-        reset_url = f"http://localhost:8000/api/password-reset-confirm/{uid}/{token}/"
+        reset_url = f"http://localhost:5173/password-reset-confirm/{uid}/{token}/"
 
 
         send_mail(

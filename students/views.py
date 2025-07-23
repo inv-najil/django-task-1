@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from .models import Student
 from .serializers import StudentSerializer
 from students.permissions import IsAdminOrTeacherOnly
@@ -16,7 +17,7 @@ Student curd opersations with permission class and quetset modified to see only 
 class StudentView(viewsets.ModelViewSet):
     queryset = Student.objects.all().order_by("id")
     serializer_class = StudentSerializer
-    permission_classes = [IsAdminOrTeacherOnly]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
@@ -128,8 +129,8 @@ class StudentView(viewsets.ModelViewSet):
             "admission_date": row["admission_date"],
             "status": row["status"],
             "assigned_teacher": teacher.id,
-            "password": row.get("password", "defaultpass123"),
-            "password2": row.get("password", "defaultpass123"),
+            "password": row["password"],
+            "password2": row["password"],
             }
 
             serializer = RegistrationSerializer(data=row_data, context={"request": request})

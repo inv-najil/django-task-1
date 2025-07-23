@@ -21,6 +21,7 @@ class AnswerSerializer(serializers.ModelSerializer):
 
 class StudentExamSubmissionSerializer(serializers.ModelSerializer):
     answers = AnswerSerializer(many=True)
+    started_at = serializers.DateTimeField(required=True)
     class Meta:
         model = StudentExamSubmission
-        fields = ['exam','answers']
+        fields = ['exam','started_at','answers']
