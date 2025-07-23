@@ -32,7 +32,7 @@ class ExamViewSet(viewsets.ModelViewSet):
         if exam.questions.count() >= 5:
             return Response({"Error": "Only 5 Questions allowed"}, status=status.HTTP_400_BAD_REQUEST)
          
-        serializer = QuestionSerializer(data=request.data, many=True)
+        serializer = QuestionSerializer(data=request.data,many=True)
         if serializer.is_valid():
             if len(serializer.validated_data) != 5:
                 return Response({"Error":"You must add 5 questions"},status=status.HTTP_400_BAD_REQUEST)
@@ -41,6 +41,17 @@ class ExamViewSet(viewsets.ModelViewSet):
             return Response({"Message":"% questions added successfully"},status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+
+    @action(detail=True, methods=['get'], url_path='questions')
+    def questions(self, request, pk=None):
+        exam = self.get_object()
+        questions = exam.questions.all()
+        serializer = QuestionSerializer(questions, many=True)
+        return Response({
+            "duration": exam.duration,  
+            "questions": serializer.data
+        })
+
     @action(detail=True, methods=['post'], url_path='submit')
     def submit_exam(self, request, pk=None):
         exam = self.get_object()
@@ -52,16 +63,16 @@ class ExamViewSet(viewsets.ModelViewSet):
         serializer = StudentExamSubmissionSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+        started_at = serializer.validated_data['started_at']
         now = timezone.now()
-        allowed_end_time = now + timedelta(minutes=exam.duration)
+        allowed_end_time = started_at + timedelta(minutes=exam.duration)
 
         if now > allowed_end_time:
             return Response({"Error": "Time limit Exceeded"}, status=status.HTTP_400_BAD_REQUEST)
 
            
         submission = StudentExamSubmission.objects.create(
-            student=user, exam=exam, started_at=now, score=0
+            student=user, exam=exam, started_at=started_at, score=0
         )
         
         total_score = 0

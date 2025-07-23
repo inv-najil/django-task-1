@@ -31,17 +31,17 @@ class RegistrationSerializer(serializers.Serializer):
     password2 = serializers.CharField(write_only=True, required=True)
     phone = serializers.CharField(write_only=True)
     #teacher field
-    subject_spl    = serializers.CharField(write_only=True, required=False)
-    employee_id    = serializers.CharField(write_only=True, required=False)
-    date_of_joining= serializers.DateField(write_only=True, required=False)
-    status         = serializers.ChoiceField(choices=Teacher.STATUS_CHOICE, write_only=True, required=False)
+    subject_spl    = serializers.CharField(write_only=True, required=True)
+    employee_id    = serializers.CharField(write_only=True, required=True)
+    date_of_joining= serializers.DateField(write_only=True, required=True)
+    status         = serializers.ChoiceField(choices=Teacher.STATUS_CHOICE, write_only=True, required=True)
     #student fields
-    roll_no        = serializers.CharField(write_only=True, required=False)
-    grade          = serializers.CharField(write_only=True, required=False)
-    dob            = serializers.DateField(write_only=True, required=False)
-    admission_date = serializers.DateField(write_only=True, required=False)
+    roll_no        = serializers.CharField(write_only=True, required=True)
+    grade          = serializers.CharField(write_only=True, required=True)
+    dob            = serializers.DateField(write_only=True, required=True)
+    admission_date = serializers.DateField(write_only=True, required=True)
     assigned_teacher = serializers.PrimaryKeyRelatedField(
-        queryset=Teacher.objects.all(), write_only=True, required=False
+        queryset=Teacher.objects.all(), write_only=True, required=True
     )
 
 
