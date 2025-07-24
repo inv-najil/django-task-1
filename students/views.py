@@ -57,8 +57,6 @@ class StudentView(viewsets.ModelViewSet):
 
         students = Student.objects.filter(assigned_teacher=teacher)
         serializer = self.get_serializer(students, many=True)
-    
-       
         return Response(serializer.data)
     
     """
